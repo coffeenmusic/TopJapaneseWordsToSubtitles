@@ -1,6 +1,7 @@
 *.apkg
 *.srt
 *known_words.txt
+*.zip
 *NewSubs/
 /.ipynb_checkpoints
 /__pycache__
