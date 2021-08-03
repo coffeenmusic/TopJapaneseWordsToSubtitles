@@ -16,28 +16,32 @@ IGNORE_FILENAME = 'previous_export_words.txt'
 OUTPUT_DIR = 'New_Subs'
 SUB_DIR = 'Subtitles'
 IGNORE_DIR = 'Ignore_Lists'
+MATCH_DIR = 'Match_Lists'
 valid_extensions = ['.srt']
 
 # Intialization
 tagger = Tagger()
-for dir_name in [SUB_DIR, IGNORE_DIR, OUTPUT_DIR]:
+for dir_name in [SUB_DIR, IGNORE_DIR, OUTPUT_DIR, MATCH_DIR]:
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
         
-# Import ignore list
-ignore = []
-for ignore_file in [f for f in os.listdir(IGNORE_DIR) if f.endswith('.txt')]:
-    ignore_file = os.path.join(IGNORE_DIR, ignore_file)
-    with open(ignore_file, 'r') as file:
+# Import match list
+match = []
+for match_file in [f for f in os.listdir(MATCH_DIR) if f.endswith('.txt')]:
+    match_file = os.path.join(MATCH_DIR, match_file)
+    with open(match_file, 'r', encoding="utf-8") as file:
         for line in file:
-            ignore += [line.replace('\n', '')]
+            for word in line.replace(',', '\n').split('\n'):
+                for token in tagger(word):
+                    match += [token.surface]
 
 parser = argparse.ArgumentParser(description='Convert a japanese subtitle file to a list of the most common words from that file & export as Anki flash card deck.')
 parser.add_argument('-s', '--sub', type=str, help='Subtitle path. If arg not used, will process all files in Subtitles dir')
 parser.add_argument('-t', '--top', type=int, help='Get the top n most common words. Default 10.')
 parser.add_argument('-d', '--drop_kana', action='store_true', help='Dont append kana to exported words.')
-parser.add_argument('-i', '--ignore_added', action='store_true', help='Exports any added words to the ignore list. Default False')
+parser.add_argument('-i', '--ignore_added', action='store_true', help='Dont add words to the ignore list after each subtitle is analyzed')
 parser.add_argument('-list', '--export_list', action='store_true', help='Exports any added words to the ignore list')
+parser.add_argument('-skip', '--skip_match', action='store_true', help='Dont filter out words in MATCH_LIST dir')
 
 args = parser.parse_args()
 include_kana = not(args.drop_kana)
@@ -48,12 +52,21 @@ if process_all:
     sub_files = [os.path.join(SUB_DIR, f) for f in os.listdir(SUB_DIR) if f.endswith('|'.join(valid_extensions))]
 else:
     sub_files = [args.sub]
+sub_files = sorted(sub_files)
     
 for sub_idx, sub_file in enumerate(sub_files):       
     
     """
     Part 1: Get n most common Words --------------
     """
+    
+    # Import ignore list
+    ignore = []
+    for ignore_file in [f for f in os.listdir(IGNORE_DIR) if f.endswith('.txt')]:
+        ignore_file = os.path.join(IGNORE_DIR, ignore_file)
+        with open(ignore_file, 'r') as file:
+            for line in file:
+                ignore += [line.replace('\n', '')]
 
     all_words = []
     subs = []
@@ -77,6 +90,9 @@ for sub_idx, sub_file in enumerate(sub_files):
                 all_words += [word.surface]
      
     filtered = [w for w in all_words if w not in ['　'] and w.split()[0] not in ignore and not w.isdigit()]
+    if not args.skip_match:
+        filtered = [w for w in filtered if w.split()[0] in match]
+    print(f'Found {len(all_words)} words, Filtered to {len(filtered)} words')
     word_counts = Counter(filtered)
     
     mc = [word.split()[0] for word, _ in word_counts.most_common()[:n_most_common]]

@@ -24,9 +24,9 @@ Note: jisho-py currently must be copied to the site-packages directory because i
     ```
     python subjaptop.py --top 20
     ```
-- Export subtitle file with the 20 most common words
+- Allow words outside N5-N1 core dictionary (You can also add your own words to MATCH_LISTS dir)
     ```
-    python subjaptop.py --top 20
+    python subjaptop.py --skip_match
     ```
     
 ### optional arguments:
