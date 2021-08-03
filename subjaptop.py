@@ -64,14 +64,14 @@ for sub_idx, sub_file in enumerate(sub_files):
     ignore = []
     for ignore_file in [f for f in os.listdir(IGNORE_DIR) if f.endswith('.txt')]:
         ignore_file = os.path.join(IGNORE_DIR, ignore_file)
-        with open(ignore_file, 'r') as file:
+        with open(ignore_file, 'r', encoding="utf-8") as file:
             for line in file:
                 ignore += [line.replace('\n', '')]
 
     all_words = []
     subs = []
     body = []
-    with open(sub_file, 'r') as file:
+    with open(sub_file, 'r', encoding="utf-8") as file:
         for i, line in enumerate(file):
             line = line.replace('\ufeff', '')
             if line in ['', ' ']:
@@ -125,7 +125,7 @@ for sub_idx, sub_file in enumerate(sub_files):
             idx += 1 
 
         export_name = ntpath.basename(sub_file).split('.')[0] + '_Top' + str(n_most_common) + '.srt'
-        with open(os.path.join(OUTPUT_DIR, export_name), 'w') as file:
+        with open(os.path.join(OUTPUT_DIR, export_name), 'w', encoding="utf-8") as file:
             file.writelines([w for w in new_sub])
 
     # Export words to ignore for future decks
@@ -135,13 +135,13 @@ for sub_idx, sub_file in enumerate(sub_files):
         new_ignores = skipped + words_added
 
         if os.path.isfile(ignore_file):
-            with open(ignore_file, 'r') as file:
+            with open(ignore_file, 'r', encoding="utf-8") as file:
                 for line in file:
                     new_ignores += [line.replace('\n', '')]
 
         new_ignores = sorted(set(new_ignores))
 
-        with open(ignore_file, 'w') as file:
+        with open(ignore_file, 'w', encoding="utf-8") as file:
             file.writelines([w + '\n' for w in new_ignores])
     
     ignored = '' if IGNORE_ADDED else ' not'
